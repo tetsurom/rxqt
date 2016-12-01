@@ -20,6 +20,8 @@ struct from_signal
 
     static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
     {
+        if(!qobject) return rxcpp::sources::never<value_type>();
+
         return rxcpp::observable<>::create<value_type>(
             [qobject, signal](const rxcpp::subscriber<value_type>& s){
                 QObject::connect(qobject, signal,[s](const Args&... values){
@@ -41,6 +43,8 @@ struct from_signal<R, Q>
 
     static rxcpp::observable<long> create(const Q* qobject, signal_type signal)
     {
+        if(!qobject) return rxcpp::sources::never<value_type>();
+
         return rxcpp::observable<>::create<long>(
             [qobject, signal](const rxcpp::subscriber<long>& s){
                 long counter = 0;
@@ -63,6 +67,8 @@ struct from_signal<R, Q, A0>
 
     static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
     {
+        if(!qobject) return rxcpp::sources::never<value_type>();
+
         return rxcpp::observable<>::create<value_type>(
             [qobject, signal](const rxcpp::subscriber<value_type>& s){
                 QObject::connect(qobject, signal, [s](const A0& v0){

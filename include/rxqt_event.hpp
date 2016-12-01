@@ -37,6 +37,8 @@ private:
 rxcpp::observable<QEvent*>
 from_event(QObject* qobject, QEvent::Type type)
 {
+    if(!qobject) return rxcpp::sources::never<QEvent*>();
+
     return rxcpp::observable<>::create<QEvent*>(
         [qobject, type](rxcpp::subscriber<QEvent*> s){
             qobject->installEventFilter(new event::detail::EventFilter(qobject, type, s));
