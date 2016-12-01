@@ -15,8 +15,8 @@ namespace detail {
 template <class R, class Q, class ...Args>
 struct from_signal
 {
-    using signal_type = R(Q::*)(const Args&...);
-    using value_type = std::tuple<Args...>;
+    using signal_type = R(Q::*)(Args...);
+    using value_type = std::tuple<typename std::remove_const<typename std::remove_reference<Args>::type>::type...>;
 
     static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
     {
@@ -62,8 +62,8 @@ struct from_signal<R, Q>
 template <class R, class Q, class A0>
 struct from_signal<R, Q, A0>
 {
-    using signal_type = R(Q::*)(const A0&);
-    using value_type = A0;
+    using signal_type = R(Q::*)(A0);
+    using value_type = typename std::remove_const<typename std::remove_reference<A0>::type>::type;
 
     static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
     {
@@ -88,7 +88,7 @@ struct from_signal<R, Q, A0>
 
 template <class R, class Q, class ...Args>
 rxcpp::observable<typename signal::detail::from_signal<R, Q, Args...>::value_type>
-from_signal(const Q* qobject, R(Q::*signal)(const Args&...))
+from_signal(const Q* qobject, R(Q::*signal)(Args...))
 {
     return signal::detail::from_signal<R, Q, Args...>::create(qobject, signal);
 }
