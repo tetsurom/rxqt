@@ -102,9 +102,15 @@ struct get_signal_factory
 {
     using as_tuple = std::tuple<Args...>;
     static constexpr bool has_private_signal =
-        is_private_signal<Q, typename std::tuple_element<sizeof...(Args) - 1, as_tuple>::type>::value;
+        is_private_signal<Q, std::tuple_element_t<sizeof...(Args) - 1, as_tuple>>::value;
     static constexpr size_t arg_count = has_private_signal ? sizeof...(Args) - 1 : sizeof...(Args);
     using type = typename construct_signal_type<R, Q, as_tuple, std::make_index_sequence<arg_count>>::type;
+};
+
+template <class R, class Q>
+struct get_signal_factory<R, Q>
+{
+    using type = from_signal<R, Q>;
 };
 
 } // detail
