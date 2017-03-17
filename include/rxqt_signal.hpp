@@ -16,7 +16,7 @@ template <class R, class Q, class ...Args>
 struct from_signal
 {
     using signal_type = R(Q::*)(Args...);
-    using value_type = std::tuple<typename std::remove_const<typename std::remove_reference<Args>::type>::type...>;
+    using value_type = std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>;
 
     static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
     {
@@ -63,7 +63,7 @@ template <class R, class Q, class A0>
 struct from_signal<R, Q, A0>
 {
     using signal_type = R(Q::*)(A0);
-    using value_type = typename std::remove_const<typename std::remove_reference<A0>::type>::type;
+    using value_type = std::remove_cv_t<std::remove_reference_t<A0>>;
 
     static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
     {
@@ -94,7 +94,7 @@ struct construct_signal_type;
 template <class R, class Q, class T, std::size_t... Is>
 struct construct_signal_type<R, Q, T, std::index_sequence<Is...>>
 {
-    using type = from_signal<R, Q, typename std::tuple_element<Is, T>::type...>;
+    using type = from_signal<R, Q, std::tuple_element_t<Is, T>...>;
 };
 
 template <class R, class Q, class ...Args>
