@@ -122,7 +122,7 @@ rxcpp::observable<typename signal::detail::get_signal_factory<R, Q, Args...>::ty
 from_signal(const Q* qobject, R(Q::*signal)(Args...))
 {
     using signal_factory = typename signal::detail::get_signal_factory<R, Q, Args...>::type;
-    return typename signal_factory::create(qobject, reinterpret_cast<typename signal_factory::signal_type>(signal));
+    return signal_factory::create(qobject, reinterpret_cast<typename signal_factory::signal_type>(signal));
 }
 
 } // qtrx

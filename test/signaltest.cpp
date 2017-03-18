@@ -69,7 +69,7 @@ private slots:
         QVERIFY(called);
         QVERIFY(completed);
     }
-
+/*
     void fromPrivateSignal_nullary()
     {
         bool called = false;
@@ -118,7 +118,7 @@ private slots:
         QVERIFY(called);
         QVERIFY(completed);
     }
-
+*/
 signals:
     void signal_nullary();
     void signal_unary_int(int);
@@ -130,5 +130,5 @@ signals:
     void signal_private_binary(int, const QString&, QPrivateSignal);
 };
 
-QTEST_MAIN(TestObservable)
+QTEST_GUILESS_MAIN(TestObservable)
 #include "signaltest.moc"

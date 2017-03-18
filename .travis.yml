@@ -1,0 +1,22 @@
+language: cpp
+sudo: required
+compiler:
+  - gcc
+before_install:
+  - lsb_release -a
+  - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-add-repository -y ppa:beineri/opt-qt562
+  - sudo apt-get -qq update
+  - sudo apt-get -qq install g++-5 libc6-i386 qt56tools qt56base
+  - export CXX="g++-5"
+  - export CC="gcc-5"
+install:
+  - git clone https://github.com/Reactive-Extensions/RxCpp.git RxCpp
+script:
+  - QTDIR="/opt/qt56"
+  - PATH="$QTDIR/bin:$PATH"
+  - qt56-env.sh
+  - cd test
+  - qmake test.pro
+  - make CXX="g++-5" CC="gcc-5" all
+  - ./rxtest
