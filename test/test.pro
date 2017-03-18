@@ -11,5 +11,10 @@ TEMPLATE = app
 INCLUDEPATH += ../Rx/v2/src
 INCLUDEPATH += ../include
 
+PRECOMPILED_HEADER = pch.hpp
+
 SOURCES += \
     signaltest.cpp
+
+HEADERS += \
+    pch.hpp
