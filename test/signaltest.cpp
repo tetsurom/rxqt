@@ -59,7 +59,7 @@ private slots:
         bool completed = false;
         {
             TestObservable subject;
-            rxqt::from_signal(&subject, &TestObservable::signal_binary).subscribe([&](const std::tuple<int, const QString&>& t) {
+            rxqt::from_signal(&subject, &TestObservable::signal_binary).subscribe([&](const std::tuple<int, const QString>& t) {
                 QVERIFY(std::get<0>(t) == 1);
                 QVERIFY(std::get<1>(t) == "string");
                 called = true;
@@ -108,7 +108,7 @@ private slots:
         bool completed = false;
         {
             TestObservable subject;
-            rxqt::from_signal(&subject, &TestObservable::signal_private_binary).subscribe([&](const std::tuple<int, const QString&>& t) {
+            rxqt::from_signal(&subject, &TestObservable::signal_private_binary).subscribe([&](const std::tuple<int, const QString>& t) {
                 QVERIFY(std::get<0>(t) == 1);
                 QVERIFY(std::get<1>(t) == "string");
                 called = true;
