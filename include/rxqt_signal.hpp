@@ -117,12 +117,12 @@ struct get_signal_factory<R, Q>
 
 } // signal
 
-template <class R, class Q, class ...Args>
-rxcpp::observable<typename signal::detail::get_signal_factory<R, Q, Args...>::type::value_type>
-from_signal(const Q* qobject, R(Q::*signal)(Args...))
+template <class P, class R, class Q, class ...Args>
+std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::get_signal_factory<R, Q, Args...>::type::value_type>>
+from_signal(const P* qobject, R(Q::*signal)(Args...))
 {
     using signal_factory = typename signal::detail::get_signal_factory<R, Q, Args...>::type;
-    return signal_factory::create(qobject, reinterpret_cast<typename signal_factory::signal_type>(signal));
+    return signal_factory::create(static_cast<const Q*>(qobject), reinterpret_cast<typename signal_factory::signal_type>(signal));
 }
 
 } // qtrx
