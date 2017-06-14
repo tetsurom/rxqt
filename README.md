@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/tetsurom/rxqt.svg?branch=master)](https://travis-ci.org/tetsurom/rxqt)
+[![Linux and OS X Build Status](https://travis-ci.org/tetsurom/rxqt.svg?branch=master)](https://travis-ci.org/tetsurom/rxqt)
+
+[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/tetsurom/rxqt?svg=true)](https://ci.appveyor.com/api/projects/status/github/tetsurom/rxqt)
+
 
 # RxQt
 The Reactive Extensions for Qt.
