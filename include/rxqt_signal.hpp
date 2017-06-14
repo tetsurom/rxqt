@@ -12,36 +12,16 @@ namespace signal {
 
 namespace detail {
 
-template <class R, class Q, class ...Args>
-struct from_signal
+template <class Q, class T>
+struct from_signal;
+
+template <class Q>
+struct from_signal<Q, std::tuple<>>
 {
-    using signal_type = R(Q::*)(Args...);
-    using value_type = std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>;
-
-    static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
-    {
-        if(!qobject) return rxcpp::sources::never<value_type>();
-
-        return rxcpp::observable<>::create<value_type>(
-            [qobject, signal](const rxcpp::subscriber<value_type>& s){
-                QObject::connect(qobject, signal,[s](const Args&... values){
-                    s.on_next(std::make_tuple(values...));
-                });
-                QObject::connect(qobject, &QObject::destroyed, [s](){
-                    s.on_completed();
-                });
-            }
-        );
-    }
-};
-
-template <class R, class Q>
-struct from_signal<R, Q>
-{
-    using signal_type = R(Q::*)();
     using value_type = long;
 
-    static rxcpp::observable<long> create(const Q* qobject, signal_type signal)
+    template <class S>
+    static rxcpp::observable<long> create(const Q* qobject, S signal)
     {
         if(!qobject) return rxcpp::sources::never<value_type>();
 
@@ -59,20 +39,43 @@ struct from_signal<R, Q>
     }
 };
 
-template <class R, class Q, class A0>
-struct from_signal<R, Q, A0>
+template <class Q, class A0>
+struct from_signal<Q, std::tuple<A0>>
 {
-    using signal_type = R(Q::*)(A0);
     using value_type = std::remove_cv_t<std::remove_reference_t<A0>>;
 
-    static rxcpp::observable<value_type> create(const Q* qobject, signal_type signal)
+    template <class S>
+    static rxcpp::observable<value_type> create(const Q* qobject, S signal)
+    {
+        if (!qobject) return rxcpp::sources::never<value_type>();
+
+        return rxcpp::observable<>::create<value_type>(
+            [qobject, signal](const rxcpp::subscriber<value_type>& s) {
+                 QObject::connect(qobject, signal, [s](const A0& v0) {
+                     s.on_next(v0);
+                 });
+                 QObject::connect(qobject, &QObject::destroyed, [s]() {
+                     s.on_completed();
+                 });
+             }
+        );
+    }
+};
+
+template <class Q, class ...Args>
+struct from_signal<Q, std::tuple<Args...>>
+{
+    using value_type = std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>;
+
+    template <class S>
+    static rxcpp::observable<value_type> create(const Q* qobject, S signal)
     {
         if(!qobject) return rxcpp::sources::never<value_type>();
 
         return rxcpp::observable<>::create<value_type>(
             [qobject, signal](const rxcpp::subscriber<value_type>& s){
-                QObject::connect(qobject, signal, [s](const A0& v0){
-                    s.on_next(v0);
+                QObject::connect(qobject, signal, [s](const Args&... values){
+                    s.on_next(std::make_tuple(values...));
                 });
                 QObject::connect(qobject, &QObject::destroyed, [s](){
                     s.on_completed();
@@ -82,47 +85,59 @@ struct from_signal<R, Q, A0>
     }
 };
 
+template <class T, class U>
+struct tuple_subset;
+
+template <class T, size_t... Is>
+struct tuple_subset<T, std::index_sequence<Is...>>
+{
+    using type = std::tuple<std::tuple_element_t<Is, T>...>;
+};
+
+template <class T, size_t N>
+struct tuple_take
+{
+    using type = typename tuple_subset<T, std::make_index_sequence<N>>::type;
+};
+
+template <class T, size_t N>
+using tuple_take_t = typename tuple_take<T, N>::type;
+
 template <class Q, class T>
 struct is_private_signal : std::false_type {};
 
 template <class Q>
 struct is_private_signal<Q, typename Q::QPrivateSignal> : std::true_type {};
 
-template <class R, class Q, class T, class U>
-struct construct_signal_type;
+template <class Q, class T>
+using has_private_signal = is_private_signal<Q, std::tuple_element_t<std::tuple_size<T>::value - 1, T>>;
 
-template <class R, class Q, class T, std::size_t... Is>
-struct construct_signal_type<R, Q, T, std::index_sequence<Is...>>
+template <class Q, class ...Args>
+struct signal_factory
 {
-    using type = from_signal<R, Q, std::tuple_element_t<Is, T>...>;
+    using arg_tuple = std::tuple<Args...>;
+    static constexpr size_t arg_count = has_private_signal<Q, arg_tuple>::value ? sizeof...(Args) - 1 : sizeof...(Args);
+    using type = from_signal<Q, tuple_take_t<arg_tuple, arg_count>>;
 };
 
-template <class R, class Q, class ...Args>
-struct get_signal_factory
+template <class Q>
+struct signal_factory<Q>
 {
-    using as_tuple = std::tuple<Args...>;
-    static constexpr bool has_private_signal =
-        is_private_signal<Q, std::tuple_element_t<sizeof...(Args) - 1, as_tuple>>::value;
-    static constexpr size_t arg_count = has_private_signal ? sizeof...(Args) - 1 : sizeof...(Args);
-    using type = typename construct_signal_type<R, Q, as_tuple, std::make_index_sequence<arg_count>>::type;
+    using type = from_signal<Q, std::tuple<>>;
 };
 
-template <class R, class Q>
-struct get_signal_factory<R, Q>
-{
-    using type = from_signal<R, Q>;
-};
+template <class Q, class ...Args>
+using signal_factory_t = typename signal_factory<Q, Args...>::type;
 
 } // detail
 
 } // signal
 
 template <class P, class R, class Q, class ...Args>
-std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::get_signal_factory<R, Q, Args...>::type::value_type>>
+std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::signal_factory_t<Q, Args...>::value_type>>
 from_signal(const P* qobject, R(Q::*signal)(Args...))
 {
-    using signal_factory = typename signal::detail::get_signal_factory<R, Q, Args...>::type;
-    return signal_factory::create(static_cast<const Q*>(qobject), reinterpret_cast<typename signal_factory::signal_type>(signal));
+    return signal::detail::signal_factory_t<Q, Args...>::create(static_cast<const Q*>(qobject), signal);
 }
 
 } // qtrx
