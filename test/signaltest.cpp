@@ -36,7 +36,7 @@ private slots:
         QVERIFY(called);
         QVERIFY(completed);
     }
-    
+
     void fromSignal_unary_string()
     {
         bool called = false;
@@ -52,7 +52,7 @@ private slots:
         QVERIFY(called);
         QVERIFY(completed);
     }
-    
+
     void fromSignal_binary()
     {
         bool called = false;
@@ -117,6 +117,24 @@ private slots:
         }
         QVERIFY(called);
         QVERIFY(completed);
+    }
+
+    void add_to()
+    {
+        bool called = false;
+        bool completed = false;
+        {
+            TestObservable subject;
+            QObject* dummy = new TestObservable();
+            rxqt::from_signal(&subject, &TestObservable::signal_nullary).subscribe([&](long c) {
+                QVERIFY(c == 0);
+                called = true;
+            }, [&]() { completed = true; }) | rxqt::add_to(dummy);
+            delete dummy; // result into unsubscribe
+            emit subject.signal_nullary();
+        }
+        QVERIFY(!called);
+        QVERIFY(!completed);
     }
 
 signals:
