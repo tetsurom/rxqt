@@ -24,7 +24,7 @@ private:
     const QObject* qobject;
 };
 
-inline auto operator|(rxcpp::composite_subscription& source, const add_to& func)
+inline auto operator|(rxcpp::composite_subscription source, const add_to& func)
 {
     return func(source);
 }
