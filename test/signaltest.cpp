@@ -69,14 +69,14 @@ private slots:
         QVERIFY(called);
         QVERIFY(completed);
     }
-/*
+
     void fromPrivateSignal_nullary()
     {
         bool called = false;
         bool completed = false;
         {
             TestObservable subject;
-            rxqt::from_signal(&subject, &TestObservable::signal_private_nullary).subscribe([&](long c) {
+            rxqt::from_signal<0>(&subject, &TestObservable::signal_private_nullary).subscribe([&](long c) {
                 QVERIFY(c == 0);
                 called = true;
             }, [&]() { completed = true; });
@@ -92,7 +92,7 @@ private slots:
         bool completed = false;
         {
             TestObservable subject;
-            rxqt::from_signal(&subject, &TestObservable::signal_private_unary_int).subscribe([&](int c) {
+            rxqt::from_signal<1>(&subject, &TestObservable::signal_private_unary_int).subscribe([&](int c) {
                 QVERIFY(c == 1);
                 called = true;
             }, [&]() { completed = true; });
@@ -108,7 +108,7 @@ private slots:
         bool completed = false;
         {
             TestObservable subject;
-            rxqt::from_signal(&subject, &TestObservable::signal_private_binary).subscribe([&](const std::tuple<int, const QString>& t) {
+            rxqt::from_signal<2>(&subject, &TestObservable::signal_private_binary).subscribe([&](const std::tuple<int, const QString>& t) {
                 QVERIFY(std::get<0>(t) == 1);
                 QVERIFY(std::get<1>(t) == "string");
                 called = true;
@@ -118,7 +118,7 @@ private slots:
         QVERIFY(called);
         QVERIFY(completed);
     }
-*/
+
 signals:
     void signal_nullary();
     void signal_unary_int(int);

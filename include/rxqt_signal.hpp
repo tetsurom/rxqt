@@ -112,32 +112,39 @@ struct is_private_signal<Q, typename Q::QPrivateSignal> : std::true_type {};
 template <class Q, class T>
 using has_private_signal = is_private_signal<Q, std::tuple_element_t<std::tuple_size<T>::value - 1, T>>;
 
-template <class Q, class ...Args>
+template <size_t N, class Q, class ...Args>
 struct signal_factory
 {
-    using arg_tuple = std::tuple<Args...>;
-    static constexpr size_t arg_count = has_private_signal<Q, arg_tuple>::value ? sizeof...(Args) - 1 : sizeof...(Args);
-    using type = from_signal<Q, tuple_take_t<arg_tuple, arg_count>>;
+    static_assert(N <= sizeof...(Args), "Cannot take larger number of parameter than the signal has.");
+    using type = from_signal<Q, tuple_take_t<std::tuple<Args...>, N>>;
 };
 
-template <class Q>
-struct signal_factory<Q>
+template <size_t N, class Q>
+struct signal_factory<N, Q>
 {
+    static_assert(N <= 0, "Cannot take larger number of parameter than the signal has.");
     using type = from_signal<Q, std::tuple<>>;
 };
 
-template <class Q, class ...Args>
-using signal_factory_t = typename signal_factory<Q, Args...>::type;
+template <size_t N, class Q, class ...Args>
+using signal_factory_t = typename signal_factory<N, Q, Args...>::type;
 
 } // detail
 
 } // signal
 
-template <class P, class R, class Q, class ...Args>
-std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::signal_factory_t<Q, Args...>::value_type>>
+template <class P, class Q, class R, class ...Args>
+std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::signal_factory_t<sizeof...(Args), Q, Args...>::value_type>>
 from_signal(const P* qobject, R(Q::*signal)(Args...))
 {
-    return signal::detail::signal_factory_t<Q, Args...>::create(static_cast<const Q*>(qobject), signal);
+    return signal::detail::signal_factory_t<sizeof...(Args), Q, Args...>::create(static_cast<const Q*>(qobject), signal);
+}
+
+template <size_t N, class P, class Q, class R, class ...Args>
+std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::signal_factory_t<N, Q, Args...>::value_type>>
+from_signal(const P* qobject, R(Q::*signal)(Args...))
+{
+    return signal::detail::signal_factory_t<N, Q, Args...>::create(static_cast<const Q*>(qobject), signal);
 }
 
 } // qtrx
