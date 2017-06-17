@@ -133,18 +133,17 @@ using signal_factory_t = typename signal_factory<N, Q, Args...>::type;
 
 } // signal
 
-template <class P, class Q, class R, class ...Args>
-std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::signal_factory_t<sizeof...(Args), Q, Args...>::value_type>>
-from_signal(const P* qobject, R(Q::*signal)(Args...))
+template <size_t N, class P, class Q, class R, class ...Args>
+auto from_signal(const P* qobject, R(Q::*signal)(Args...))
 {
-    return signal::detail::signal_factory_t<sizeof...(Args), Q, Args...>::create(static_cast<const Q*>(qobject), signal);
+    static_assert(std::is_base_of<Q, P>::value, "Given signal is not member of sender class nor it's base class.");
+    return signal::detail::signal_factory_t<N, Q, Args...>::create(static_cast<const Q*>(qobject), signal);
 }
 
-template <size_t N, class P, class Q, class R, class ...Args>
-std::enable_if_t<std::is_base_of<Q, P>::value, rxcpp::observable<typename signal::detail::signal_factory_t<N, Q, Args...>::value_type>>
-from_signal(const P* qobject, R(Q::*signal)(Args...))
+template <class P, class Q, class R, class ...Args>
+auto from_signal(const P* qobject, R(Q::*signal)(Args...))
 {
-    return signal::detail::signal_factory_t<N, Q, Args...>::create(static_cast<const Q*>(qobject), signal);
+    return from_signal<sizeof...(Args)>(qobject, signal);
 }
 
 } // qtrx
