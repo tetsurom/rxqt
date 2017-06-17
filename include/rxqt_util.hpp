@@ -12,7 +12,7 @@ struct add_to {
 
     explicit add_to(const QObject* qobject): qobject(qobject) {};
 
-    rxcpp::composite_subscription& operator()(rxcpp::composite_subscription& source) const
+    rxcpp::composite_subscription operator()(rxcpp::composite_subscription source) const
     {
         QObject::connect(qobject, &QObject::destroyed, [=](){
             source.unsubscribe();
