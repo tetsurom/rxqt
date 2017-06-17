@@ -146,6 +146,6 @@ auto from_signal(const P* qobject, R(Q::*signal)(Args...))
     return from_signal<sizeof...(Args)>(qobject, signal);
 }
 
-} // qtrx
+} // rxqt
 
 #endif // RXQT_SIGNAL_HPP
