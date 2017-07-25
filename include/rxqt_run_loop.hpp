@@ -7,12 +7,10 @@
 
 namespace rxqt {
 
-namespace run_loop {
-
-class RunLoop
+class run_loop
 {
-public:
-   RunLoop(QObject *parent = Q_NULLPTR) : timer(parent)
+ public:
+   run_loop(QObject *parent = Q_NULLPTR) : timer(parent)
    {
       // Give the RxCpp run loop a a function to let us schedule a wakeup in order to dispatch run loop events
       rxcpp_run_loop.set_notify_earlier_wakeup([&](std::chrono::steady_clock::time_point when)
@@ -61,9 +59,6 @@ private:
    rxcpp::schedulers::run_loop rxcpp_run_loop;
    QTimer timer;
 };
-
-} // namespace run_loop
-
 
 } // namespace rxqt
 
