@@ -85,10 +85,27 @@ observable<QEvent*> rxqt::from_event(QObject* object, QEvent::Type type);
 
 Convert Qt event to a observable.
 
+## run_loop
+
+Provide an interface between the Qt event loop and RxCpp's run loop scheduler. This enables use of timed RxCpp operators (such as `delay` and `debounce`) with RxQt.
+
+Using `run_loop` requires an object of type `run_loop` to be live while the Qt event loop is active. This can be achieved most simply through use of a local variable defined after the Qt application object has been instantiated in `main`, or wherever the applicaiton object is instantiated. The example below gives an example of appropriate instantiation of the `run_loop`, together with a main window class of `MainWindow`:
+
+```cpp
+int main(int argc, char* argv[])
+{
+   QApplication a(argc, argv);
+   MainWindow w;
+   rxqt::run_loop rxqt_run_loop;
+   w.show();
+   return a.exec();
+}
+```
+
 # Contribution
 
 Issues or Pull Requests are welcomed :)
 
 # Requirement
 
-* [RxCpp](https://github.com/Reactive-Extensions/RxCpp)
+* [RxCpp](https://github.com/Reactive-Extensions/RxCpp) (minimum of v4.0 for use of `rxqt::run_loop`)
