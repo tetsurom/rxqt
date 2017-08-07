@@ -6,6 +6,10 @@
 #include <rxcpp/rx.hpp>
 #include <QObject>
 
+#if defined(_MSC_VER) && (_MSC_VER<=1800)//Add some CXX14Support for VS2013
+#include "CXX14Support.h"
+#endif
+
 namespace rxqt {
 
 namespace signal {
