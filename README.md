@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 observable<T> rxqt::from_signal(const QObject* sender, PointerToMemberFunction signal);
 ```
 
-Convert Qt signal to a observable. `T` is decided as following.
+Convert Qt signal to an observable. `T` is decided as following.
 
 |Signal parameter type(s)|T |Note |
 |:---------------|:-|:----|
@@ -70,7 +70,7 @@ template<size_t N>
 observable<T> rxqt::from_signal(const QObject* sender, PointerToMemberFunction signal);
 ```
 
-Convert Qt signal, as N-ary function, to a observable. This can be used to convert private signals.
+Convert Qt signal, as N-ary function, to an observable. This can be used to convert private signals.
 
 ```cpp
 auto o = from_signal(q, &QFileSystemWatcher::fileChanged); // ERROR. o is observable<tuple<QString, QFileSystemWatcher::QPrivateSignal>> where last type is private member.
