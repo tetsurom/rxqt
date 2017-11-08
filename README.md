@@ -83,7 +83,7 @@ auto o = from_signal<1>(q, &QFileSystemWatcher::fileChanged); // OK. o is observ
 observable<QEvent*> rxqt::from_event(QObject* object, QEvent::Type type);
 ```
 
-Convert Qt event to a observable.
+Convert Qt event to an observable.
 
 ## run_loop
 
