@@ -12,40 +12,51 @@ The Reactive Extensions for Qt.
 
 ```cpp
 #include <rxqt.hpp>
-#include <QDebug>
 #include <QApplication>
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QLineEdit>
-#include <QKeyEvent>
+#include <QLabel>
+
+using namespace std::chrono;
+
+namespace Rx {
+    using namespace rxcpp;
+    using namespace rxcpp::sources;
+    using namespace rxcpp::operators;
+    using namespace rxcpp::util;
+}
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
-    auto widget = std::unique_ptr<QWidget>(new QWidget());
+    rxqt::run_loop rxqt_run_loop;
+
+    auto widget = std::make_unique<QWidget>();
     auto layout = new QVBoxLayout;
     widget->setLayout(layout);
-    {
-        auto e0 = new QLineEdit("Edit here");
-        auto e1 = new QLineEdit;
-        e1->setEnabled(false);
-        layout->addWidget(e0);
-        layout->addWidget(e1);
 
-        rxqt::from_signal(e0, &QLineEdit::textChanged)
-                .map([](const QString& s){ return "[[["+s+"]]]"; })
-                .subscribe([e1](const QString& s){ e1->setText(s); });
+    auto button = new QPushButton("Click me");
+    auto label = new QLabel;
 
-        rxqt::from_event(e0, QEvent::KeyPress)
-                .subscribe([](const QEvent* e){
-                    auto ke = static_cast<const QKeyEvent*>(e);
-                    qDebug() << ke->key();
-                });
-    }
+    layout->addWidget(button);
+    layout->addWidget(label);
+
+    auto count = std::make_shared<int>(0);
+
+    rxqt::from_signal(button, &QPushButton::clicked)
+            .map([=](const auto&){ return (*count) += 1; })
+            .debounce(milliseconds(QApplication::doubleClickInterval()))
+            .tap([=](int){ (*count) = 0; })
+            .subscribe([label](int x){ label->setText(QString("%1-ple click.").arg(x)); });
+
+    rxqt::from_signal(button, &QPushButton::pressed)
+            .subscribe([=](const auto&){ label->setText(QString()); });
+
     widget->show();
-    return a.exec();
+    return app.exec();
 }
 ```
 
