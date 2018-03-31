@@ -19,13 +19,23 @@ class run_loop
          const auto ms_till_task = ms_until(when);
          if (!timer.isActive() || ms_till_task.count() < timer.remainingTime())
          {
-            timer.start(ms_till_task.count());
+            QMetaObject::invokeMethod(&timer, "start", Qt::AutoConnection, Q_ARG(int, ms_till_task.count()));
          }
       });
       timer.setSingleShot(true);
       timer.setTimerType(Qt::PreciseTimer);
       // When the timer expires, we'll flush the run loop
       timer.connect(&timer, &QTimer::timeout, [&]() { onEventScheduled(); });
+   }
+
+   rxcpp::schedulers::scheduler get_scheduler() const
+   {
+      return rxcpp_run_loop.get_scheduler();
+   }
+
+   auto observe_on_run_loop() const
+   {
+      return rxcpp::observe_on_run_loop(rxcpp_run_loop);
    }
 
 private:
