@@ -35,7 +35,7 @@ private:
 } // event
 
 rxcpp::observable<QEvent*>
-from_event(QObject* qobject, QEvent::Type type)
+static from_event(QObject* qobject, QEvent::Type type)
 {
     if(!qobject) return rxcpp::sources::never<QEvent*>();
 
