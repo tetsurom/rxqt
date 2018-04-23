@@ -8,7 +8,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'ppa:beineri/opt-qt562'
+            - sourceline: 'ppa:beineri/opt-qt562-trusty'
           packages:
             - g++-5
             - libc6-i386
