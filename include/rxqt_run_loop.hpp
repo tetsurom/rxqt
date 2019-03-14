@@ -4,28 +4,36 @@
 
 #include <rxcpp/rx.hpp>
 #include <QTimer>
+#include <QThread>
 
 namespace rxqt {
 
 class run_loop
 {
  public:
-   run_loop(QObject *parent = Q_NULLPTR) : timer(parent)
+   run_loop(QObject *parent = Q_NULLPTR) : timer(parent), threadId(QThread::currentThreadId())
    {
       // Give the RxCpp run loop a a function to let us schedule a wakeup in order to dispatch run loop events
-      rxcpp_run_loop.set_notify_earlier_wakeup([&](std::chrono::steady_clock::time_point when)
+      rxcpp_run_loop.set_notify_earlier_wakeup([this](std::chrono::steady_clock::time_point when)
       {
          // Tell the timer to wake-up at `when` if its not already waking up earlier
          const auto ms_till_task = ms_until(when);
          if (!timer.isActive() || ms_till_task.count() < timer.remainingTime())
          {
-            QMetaObject::invokeMethod(&timer, "start", Qt::AutoConnection, Q_ARG(int, ms_till_task.count()));
+            if (threadId == QThread::currentThreadId())
+            {
+               timer.start(ms_till_task.count());
+            }
+            else
+            {
+               QMetaObject::invokeMethod(&timer, "start", Qt::QueuedConnection, Q_ARG(int, ms_till_task.count()));
+            }
          }
       });
       timer.setSingleShot(true);
       timer.setTimerType(Qt::PreciseTimer);
       // When the timer expires, we'll flush the run loop
-      timer.connect(&timer, &QTimer::timeout, [&]() { onEventScheduled(); });
+      timer.connect(&timer, &QTimer::timeout, [this]() { onEventScheduled(); });
    }
 
    rxcpp::schedulers::scheduler get_scheduler() const
@@ -73,6 +81,7 @@ private:
    }
    rxcpp::schedulers::run_loop rxcpp_run_loop;
    QTimer timer;
+   Qt::HANDLE threadId;
 };
 
 } // namespace rxqt
