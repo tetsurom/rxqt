@@ -20,7 +20,7 @@ namespace rx {
 
 QString threadId(const QString& name)
 {
-    return name + QString(": %1\n").arg((int)QThread::currentThreadId());
+    return name + QString(": %1\n").arg(reinterpret_cast<uintptr_t>(QThread::currentThreadId()));
 }
 
 int main(int argc, char *argv[])
@@ -45,9 +45,9 @@ int main(int argc, char *argv[])
     rx::observable<>::range(1)
         .subscribe_on(rx::observe_on_event_loop())
         .take(1)
-        .tap([&](int x){ label->setText(label->text() + threadId("subscrive_on")); })
+        .tap([&](auto){ label->setText(label->text() + threadId("subscrive_on")); })
         .observe_on(main_thread)
-        .subscribe([&](int x){ label->setText(label->text() + threadId("observe_on")); });
+        .subscribe([&](auto){ label->setText(label->text() + threadId("observe_on")); });
 
     return app.exec();
 }
