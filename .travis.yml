@@ -28,7 +28,6 @@ matrix:
 install:
   - git clone https://github.com/Reactive-Extensions/RxCpp.git RxCpp
 script:
-  - cd test
-  - qmake test.pro
-  - make CXX="${CXX}" CC="${CC}" all
-  - ./rxtest
+  - mkdir testbuild && cd testbuild
+  - qmake ../test/test.pro -recursive
+  - make CXX="${CXX}" CC="${CC}" check

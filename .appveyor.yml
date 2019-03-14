@@ -9,9 +9,8 @@ before_build:
   - set PATH=C:\Qt\5.9\msvc2015\bin;%PATH%
 
 build_script:
-  - cd test
-  - qmake test.pro
-  - nmake
+  - mkdir testbuild && cd testbuild
+  - qmake ../test/test.pro -recursive
 
 test_script:
-  - .\Release\rxtest.exe
+  - nmake check
