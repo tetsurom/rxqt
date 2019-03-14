@@ -38,6 +38,11 @@ class run_loop
       return rxcpp::observe_on_run_loop(rxcpp_run_loop);
    }
 
+   bool empty() const
+   {
+      return rxcpp_run_loop.empty();
+   }
+
 private:
    // Flush the RxCpp run loop
    void onEventScheduled()
