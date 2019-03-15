@@ -14,26 +14,11 @@ class run_loop
    run_loop(QObject *parent = Q_NULLPTR) : timer(parent), threadId(QThread::currentThreadId())
    {
       // Give the RxCpp run loop a a function to let us schedule a wakeup in order to dispatch run loop events
-      rxcpp_run_loop.set_notify_earlier_wakeup([this](std::chrono::steady_clock::time_point when)
-      {
-         // Tell the timer to wake-up at `when` if its not already waking up earlier
-         const auto ms_till_task = ms_until(when);
-         if (!timer.isActive() || ms_till_task.count() < timer.remainingTime())
-         {
-            if (threadId == QThread::currentThreadId())
-            {
-               timer.start(ms_till_task.count());
-            }
-            else
-            {
-               QMetaObject::invokeMethod(&timer, "start", Qt::QueuedConnection, Q_ARG(int, ms_till_task.count()));
-            }
-         }
-      });
+      rxcpp_run_loop.set_notify_earlier_wakeup([this](auto const& when) { on_earlier_wakeup(when); });
       timer.setSingleShot(true);
       timer.setTimerType(Qt::PreciseTimer);
       // When the timer expires, we'll flush the run loop
-      timer.connect(&timer, &QTimer::timeout, [this]() { onEventScheduled(); });
+      timer.connect(&timer, &QTimer::timeout, [this]() { on_event_scheduled(); });
    }
 
    rxcpp::schedulers::scheduler get_scheduler() const
@@ -52,8 +37,25 @@ class run_loop
    }
 
 private:
+   void on_earlier_wakeup(std::chrono::steady_clock::time_point when)
+   {
+      // Tell the timer to wake-up at `when` if its not already waking up earlier
+      const auto ms_till_task = ms_until(when);
+      if (!timer.isActive() || ms_till_task.count() < timer.remainingTime())
+      {
+         if (threadId == QThread::currentThreadId())
+         {
+            timer.start(ms_till_task.count());
+         }
+         else
+         {
+            QMetaObject::invokeMethod(&timer, "start", Qt::QueuedConnection, Q_ARG(int, ms_till_task.count()));
+         }
+      }
+   }
+
    // Flush the RxCpp run loop
-   void onEventScheduled()
+   void on_event_scheduled()
    {
       // Dispatch outstanding RxCpp events
       while (!rxcpp_run_loop.empty() && rxcpp_run_loop.peek().when < rxcpp_run_loop.now())
@@ -67,11 +69,13 @@ private:
          timer.start(static_cast<int>(time_till_next_event.count()));
       }
    }
+
    // Calculate milliseconds from now until `when`
    std::chrono::milliseconds ms_until(rxcpp::schedulers::run_loop::clock_type::time_point const& when) const
    {
       return ceil<std::chrono::milliseconds>(when - rxcpp_run_loop.now());
    }
+
    // Round the specified duration to the smallest number of `To` ticks that's not less than `duration`
    template <class To, class Rep, class Period>
    static inline To ceil(const std::chrono::duration<Rep, Period>& duration)
@@ -79,6 +83,7 @@ private:
       const auto as_To = std::chrono::duration_cast<To>(duration);
       return (as_To < duration) ? (as_To + To{1}) : as_To;
    }
+
    rxcpp::schedulers::run_loop rxcpp_run_loop;
    QTimer timer;
    Qt::HANDLE threadId;
