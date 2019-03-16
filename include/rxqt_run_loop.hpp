@@ -5,20 +5,24 @@
 #include <rxcpp/rx.hpp>
 #include <QTimer>
 #include <QThread>
+#include <QSignalMapper>
 
 namespace rxqt {
 
-class run_loop
+class run_loop: public QObject
 {
  public:
-   run_loop(QObject *parent = Q_NULLPTR) : timer(parent), threadId(QThread::currentThreadId())
+   run_loop(QObject *parent = Q_NULLPTR) : QObject(parent), threadId(QThread::currentThreadId())
    {
+      timer = new QTimer(this);
+      mapper = new QSignalMapper(this);
       // Give the RxCpp run loop a a function to let us schedule a wakeup in order to dispatch run loop events
-      rxcpp_run_loop.set_notify_earlier_wakeup([this](auto const& when) { on_earlier_wakeup(when); });
-      timer.setSingleShot(true);
-      timer.setTimerType(Qt::PreciseTimer);
+      rxcpp_run_loop.set_notify_earlier_wakeup([this](auto const& when) { this->on_earlier_wakeup(this->ms_until(when).count()); });
+      timer->setSingleShot(true);
+      timer->setTimerType(Qt::PreciseTimer);
       // When the timer expires, we'll flush the run loop
-      timer.connect(&timer, &QTimer::timeout, [this]() { on_event_scheduled(); });
+      timer->connect(timer, &QTimer::timeout, this, &run_loop::on_event_scheduled);
+      mapper->connect(mapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &run_loop::on_earlier_wakeup);
    }
 
    rxcpp::schedulers::scheduler get_scheduler() const
@@ -37,20 +41,22 @@ class run_loop
    }
 
 private:
-   void on_earlier_wakeup(std::chrono::steady_clock::time_point when)
+   void on_earlier_wakeup(int msec)
    {
       // Tell the timer to wake-up at `when` if its not already waking up earlier
-      const auto ms_till_task = ms_until(when);
-      if (!timer.isActive() || ms_till_task.count() < timer.remainingTime())
+      if (threadId == QThread::currentThreadId())
       {
-         if (threadId == QThread::currentThreadId())
+         const int remainingTime = timer->remainingTime();
+         if (remainingTime < 0 || msec < remainingTime)
          {
-            timer.start(ms_till_task.count());
+            timer->start(msec);
          }
-         else
-         {
-            QMetaObject::invokeMethod(&timer, "start", Qt::QueuedConnection, Q_ARG(int, ms_till_task.count()));
-         }
+      }
+      else
+      {
+         mapper->setMapping(this, msec);
+         mapper->map(this);
+         mapper->removeMappings(this);
       }
    }
 
@@ -66,14 +72,14 @@ private:
       if (!rxcpp_run_loop.empty())
       {
          const auto time_till_next_event = ms_until(rxcpp_run_loop.peek().when);
-         timer.start(static_cast<int>(time_till_next_event.count()));
+         timer->start(static_cast<int>(time_till_next_event.count()));
       }
    }
 
    // Calculate milliseconds from now until `when`
    std::chrono::milliseconds ms_until(rxcpp::schedulers::run_loop::clock_type::time_point const& when) const
    {
-      return ceil<std::chrono::milliseconds>(when - rxcpp_run_loop.now());
+      return (std::max)(ceil<std::chrono::milliseconds>(when - rxcpp_run_loop.now()), std::chrono::milliseconds::zero());
    }
 
    // Round the specified duration to the smallest number of `To` ticks that's not less than `duration`
@@ -85,8 +91,9 @@ private:
    }
 
    rxcpp::schedulers::run_loop rxcpp_run_loop;
-   QTimer timer;
+   QTimer* timer;
    Qt::HANDLE threadId;
+   QSignalMapper* mapper;
 };
 
 } // namespace rxqt
