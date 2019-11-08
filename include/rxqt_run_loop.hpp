@@ -11,7 +11,7 @@ namespace rxqt {
 
 class run_loop : public QObject {
 public:
-    explicit run_loop(QObject* parent = Q_NULLPTR)
+    explicit run_loop(QObject* parent = nullptr)
         : QObject(parent)
         , threadId(QThread::currentThreadId())
     {
@@ -86,9 +86,9 @@ private:
     }
 
     rxcpp::schedulers::run_loop rxcpp_run_loop;
-    QTimer* timer;
+    QTimer* timer = nullptr;
     Qt::HANDLE threadId;
-    QSignalMapper* mapper;
+    QSignalMapper* mapper = nullptr;
 };
 
 } // namespace rxqt
