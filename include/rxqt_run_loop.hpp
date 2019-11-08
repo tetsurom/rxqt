@@ -2,7 +2,6 @@
 
 #ifndef RXQT_RUN_LOOP_HPP
 
-#include <QSignalMapper>
 #include <QThread>
 #include <QTimer>
 #include <rxcpp/rx.hpp>
@@ -16,14 +15,12 @@ public:
         , threadId(QThread::currentThreadId())
     {
         timer = new QTimer(this);
-        mapper = new QSignalMapper(this);
         // Give the RxCpp run loop a a function to let us schedule a wakeup in order to dispatch run loop events
         rxcpp_run_loop.set_notify_earlier_wakeup([this](auto const& when) { this->on_earlier_wakeup(this->ms_until(when).count()); });
         timer->setSingleShot(true);
         timer->setTimerType(Qt::PreciseTimer);
         // When the timer expires, we'll flush the run loop
         timer->connect(timer, &QTimer::timeout, this, &run_loop::on_event_scheduled);
-        mapper->connect(mapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &run_loop::on_earlier_wakeup);
     }
 
     rxcpp::schedulers::scheduler get_scheduler() const
@@ -42,6 +39,27 @@ public:
     }
 
 private:
+#if QT_VERSION < 0x051000
+    class on_earlier_wakeup_event : public QEvent {
+    public:
+        on_earlier_wakeup_event(run_loop* run_loop, int msec)
+            : QEvent(QEvent::None)
+            , msec(msec)
+            , run_loop_p(run_loop)
+        {
+        }
+
+        ~on_earlier_wakeup_event() override
+        {
+            run_loop_p->on_earlier_wakeup(msec);
+        }
+
+    private:
+        const int msec = 0;
+        run_loop* run_loop_p = nullptr;
+    };
+#endif
+
     void on_earlier_wakeup(int msec)
     {
         // Tell the timer to wake-up at `when` if its not already waking up earlier
@@ -51,9 +69,11 @@ private:
                 timer->start(msec);
             }
         } else {
-            mapper->setMapping(this, msec);
-            mapper->map(this);
-            mapper->removeMappings(this);
+#if QT_VERSION < 0x051000
+            QCoreApplication::postEvent(this, new on_earlier_wakeup_event(this, msec));
+#else
+            QMetaObject::invokeMethod(this, [this, msec] { on_earlier_wakeup(msec); });
+#endif
         }
     }
 
@@ -88,7 +108,6 @@ private:
     rxcpp::schedulers::run_loop rxcpp_run_loop;
     QTimer* timer = nullptr;
     Qt::HANDLE threadId;
-    QSignalMapper* mapper = nullptr;
 };
 
 } // namespace rxqt
