@@ -1,0 +1,3 @@
+[submodule "RxCpp"]
+	path = RxCpp
+	url = https://github.com/ReactiveX/RxCpp.git

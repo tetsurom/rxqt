@@ -1,4 +1,5 @@
-QT += core testlib
+QT *= core testlib
+QT -= gui
 
 TARGET = run_loop_test
 TEMPLATE = app

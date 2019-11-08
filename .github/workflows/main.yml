@@ -1,0 +1,63 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        qt: [5.9.8, 5.12.5]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v1
+      with:
+        version: ${{ matrix.qt }}
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: mkdir
+      run: mkdir testbuild
+    - name: qmake
+      run: qmake ../test/test.pro -recursive
+      working-directory: testbuild
+    - name: make check
+      run: make check
+      working-directory: testbuild
+
+  build-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        qt: [5.9.8, 5.12.5]
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v1
+      with:
+        version: ${{ matrix.qt }}
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: mkdir
+      run: mkdir testbuild
+    - name: qmake
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+        qmake ../test/test.pro -recursive
+      working-directory: testbuild
+      shell: cmd
+    - name: nmake check
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+        nmake check
+      working-directory: testbuild
+      shell: cmd
