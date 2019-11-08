@@ -1,39 +1,36 @@
-#include <rxqt.hpp>
 #include <QtTest/QtTest>
+#include <rxqt.hpp>
 
 namespace rx {
-    using namespace rxcpp;
-    using namespace rxcpp::subjects;
-    using namespace rxcpp::sources;
-    using namespace rxcpp::operators;
-    using namespace rxcpp::schedulers;
-    using namespace rxcpp::util;
+using namespace rxcpp;
+using namespace rxcpp::subjects;
+using namespace rxcpp::sources;
+using namespace rxcpp::operators;
+using namespace rxcpp::schedulers;
+using namespace rxcpp::util;
 }
 
 using namespace std::chrono;
 
-class RunLoopTest : public QObject
-{
+class RunLoopTest : public QObject {
     Q_OBJECT
 
 private:
     void flush(const rxqt::run_loop& runLoop) const
     {
-        while(!runLoop.empty())
-        {
+        while (!runLoop.empty()) {
             qApp->processEvents();
         }
     }
 
-    template<class F>
+    template <class F>
     void wait_until(F f, milliseconds timeout = milliseconds(1000))
     {
         QTimer timer;
         timer.setSingleShot(true);
         timer.setTimerType(Qt::PreciseTimer);
         timer.start(timeout.count());
-        while(!f() && timer.remainingTime() >= 0)
-        {
+        while (!f() && timer.remainingTime() >= 0) {
             qApp->processEvents();
         }
         QVERIFY(timer.remainingTime() >= 0);
@@ -46,7 +43,7 @@ private slots:
         rxqt::run_loop runLoop;
 
         QVERIFY(runLoop.empty());
-        rx::observable<>::timer(milliseconds(5)).subscribe([&](auto){});
+        rx::observable<>::timer(milliseconds(5)).subscribe([&](auto) {});
         QVERIFY(!runLoop.empty());
         flush(runLoop);
         QVERIFY(true);
@@ -57,7 +54,7 @@ private slots:
         rxqt::run_loop runLoop;
         bool called = false;
 
-        rx::observable<>::timer(milliseconds(5)).subscribe([&](auto){ called = true; });
+        rx::observable<>::timer(milliseconds(5)).subscribe([&](auto) { called = true; });
         QVERIFY(!called);
 
         flush(runLoop);
@@ -75,11 +72,11 @@ private slots:
         rx::observable<>::range(1)
             .subscribe_on(rx::observe_on_event_loop())
             .take(1)
-            .tap([=](auto){ QVERIFY(mainThreadId != QThread::currentThreadId()); })
+            .tap([=](auto) { QVERIFY(mainThreadId != QThread::currentThreadId()); })
             .observe_on(mainThread)
-            .subscribe([&](auto){ called = true; QVERIFY(mainThreadId == QThread::currentThreadId()); });
+            .subscribe([&](auto) { called = true; QVERIFY(mainThreadId == QThread::currentThreadId()); });
 
-        wait_until([&](){ return called; });
+        wait_until([&]() { return called; });
         flush(runLoop);
     }
 
@@ -94,12 +91,12 @@ private slots:
         rx::observable<>::timer(milliseconds(5))
             .subscribe_on(workthread)
             .observe_on(mainthread)
-            .subscribe([&](auto){ called = true; });
+            .subscribe([&](auto) { called = true; });
 
         QVERIFY(runLoop.empty());
         QVERIFY(!called);
 
-        wait_until([&](){ return called; });
+        wait_until([&]() { return called; });
 
         flush(runLoop);
     }
@@ -115,12 +112,12 @@ private slots:
         rx::observable<>::timer(milliseconds(5))
             .subscribe_on(workthread)
             .observe_on(mainthread)
-            .subscribe([&](auto){ called = true; });
+            .subscribe([&](auto) { called = true; });
 
         QVERIFY(runLoop.empty());
         QVERIFY(!called);
 
-        wait_until([&](){ return called; });
+        wait_until([&]() { return called; });
 
         flush(runLoop);
     }
@@ -134,12 +131,12 @@ private slots:
 
         rx::observable<>::timer(milliseconds(5))
             .observe_on(workthread)
-            .subscribe([&](auto){ called = true; });
+            .subscribe([&](auto) { called = true; });
 
         QVERIFY(!runLoop.empty());
         QVERIFY(!called);
 
-        wait_until([&](){ return called; });
+        wait_until([&]() { return called; });
 
         flush(runLoop);
     }
@@ -153,12 +150,12 @@ private slots:
 
         rx::observable<>::timer(milliseconds(5))
             .observe_on(workthread)
-            .subscribe([&](auto){ called = true; });
+            .subscribe([&](auto) { called = true; });
 
         QVERIFY(!runLoop.empty());
         QVERIFY(!called);
 
-        wait_until([&](){ return called; });
+        wait_until([&]() { return called; });
 
         flush(runLoop);
     }
@@ -174,7 +171,6 @@ private slots:
 
         flush(runLoop);
     }
-
 };
 
 QTEST_GUILESS_MAIN(RunLoopTest)

@@ -3,18 +3,19 @@
 #ifndef RXQT_UTIL_HPP
 #define RXQT_UTIL_HPP
 
-#include <rxcpp/rx.hpp>
 #include <QObject>
+#include <rxcpp/rx.hpp>
 
 namespace rxqt {
 
 struct add_to {
 
-    explicit add_to(const QObject* qobject): qobject(qobject) {};
+    explicit add_to(const QObject* qobject)
+        : qobject(qobject) {};
 
     rxcpp::composite_subscription operator()(rxcpp::composite_subscription source) const
     {
-        QObject::connect(qobject, &QObject::destroyed, [=](){
+        QObject::connect(qobject, &QObject::destroyed, [=]() {
             source.unsubscribe();
         });
         return source;

@@ -1,15 +1,14 @@
-#include <rxqt.hpp>
 #include <QtTest/QtTest>
+#include <rxqt.hpp>
 
 namespace rx {
-    using namespace rxcpp;
-    using namespace rxcpp::sources;
-    using namespace rxcpp::operators;
-    using namespace rxcpp::util;
+using namespace rxcpp;
+using namespace rxcpp::sources;
+using namespace rxcpp::operators;
+using namespace rxcpp::util;
 }
 
-class SignalTest : public QObject
-{
+class SignalTest : public QObject {
     Q_OBJECT
 private slots:
     void fromsignal_nullary()
@@ -20,8 +19,7 @@ private slots:
             SignalTest subject;
             rxqt::from_signal(&subject, &SignalTest::signal_nullary).subscribe([&](long c) {
                 QVERIFY(c == 0);
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_nullary();
         }
         QVERIFY(called);
@@ -36,8 +34,7 @@ private slots:
             SignalTest subject;
             rxqt::from_signal(&subject, &SignalTest::signal_unary_int).subscribe([&](int c) {
                 QVERIFY(c == 1);
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_unary_int(1);
         }
         QVERIFY(called);
@@ -52,8 +49,7 @@ private slots:
             SignalTest subject;
             rxqt::from_signal(&subject, &SignalTest::signal_unary_string).subscribe([&](const QString& s) {
                 QVERIFY(s == "string");
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_unary_string(QString("string"));
         }
         QVERIFY(called);
@@ -69,8 +65,7 @@ private slots:
             rxqt::from_signal(&subject, &SignalTest::signal_binary).subscribe([&](const std::tuple<int, QString>& t) {
                 QVERIFY(std::get<0>(t) == 1);
                 QVERIFY(std::get<1>(t) == "string");
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_binary(1, QString("string"));
         }
         QVERIFY(called);
@@ -85,8 +80,7 @@ private slots:
             SignalTest subject;
             rxqt::from_signal<0>(&subject, &SignalTest::signal_private_nullary).subscribe([&](long c) {
                 QVERIFY(c == 0);
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_private_nullary(QPrivateSignal());
         }
         QVERIFY(called);
@@ -101,8 +95,7 @@ private slots:
             SignalTest subject;
             rxqt::from_signal<1>(&subject, &SignalTest::signal_private_unary_int).subscribe([&](int c) {
                 QVERIFY(c == 1);
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_private_unary_int(1, QPrivateSignal());
         }
         QVERIFY(called);
@@ -118,8 +111,7 @@ private slots:
             rxqt::from_signal<2>(&subject, &SignalTest::signal_private_binary).subscribe([&](const std::tuple<int, const QString>& t) {
                 QVERIFY(std::get<0>(t) == 1);
                 QVERIFY(std::get<1>(t) == "string");
-                called = true;
-            }, [&]() { completed = true; });
+                called = true; }, [&]() { completed = true; });
             emit subject.signal_private_binary(1, QString("string"), QPrivateSignal());
         }
         QVERIFY(called);
@@ -135,8 +127,7 @@ private slots:
             QObject* dummy = new SignalTest();
             rxqt::from_signal(&subject, &SignalTest::signal_nullary).subscribe([&](long c) {
                 QVERIFY(c == 0);
-                called = true;
-            }, [&]() { completed = true; }) | rxqt::add_to(dummy);
+                called = true; }, [&]() { completed = true; }) | rxqt::add_to(dummy);
             delete dummy; // result into unsubscribe
             emit subject.signal_nullary();
         }
