@@ -1,12 +1,7 @@
-Build Status
-
-| Platform | Status |
-|:---------|:-------|
-|Linux and OS X|[![Linux and OS X Build Status](https://travis-ci.org/tetsurom/rxqt.svg?branch=master)](https://travis-ci.org/tetsurom/rxqt)|
-|Windows|[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/tetsurom/rxqt?svg=true)](https://ci.appveyor.com/api/projects/status/github/tetsurom/rxqt)|
-
 # RxQt
 The Reactive Extensions for Qt.
+
+![Actions Status](https://github.com/tetsurom/rxqt/workflows/CI/badge.svg?branch=master)
 
 # Example
 
