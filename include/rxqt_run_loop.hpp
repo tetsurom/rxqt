@@ -11,7 +11,7 @@ namespace rxqt {
 
 class run_loop : public QObject {
 public:
-    run_loop(QObject* parent = Q_NULLPTR)
+    explicit run_loop(QObject* parent = Q_NULLPTR)
         : QObject(parent)
         , threadId(QThread::currentThreadId())
     {
