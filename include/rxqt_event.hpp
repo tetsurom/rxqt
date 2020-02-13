@@ -3,6 +3,7 @@
 #ifndef RXQT_EVENT_HPP
 #define RXQT_EVENT_HPP
 
+#include <QObject>
 #include <QEvent>
 #include <rxcpp/rx.hpp>
 
