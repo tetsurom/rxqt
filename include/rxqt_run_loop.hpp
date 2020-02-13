@@ -2,6 +2,11 @@
 
 #ifndef RXQT_RUN_LOOP_HPP
 
+#if QT_VERSION < 0x051000
+#include <QCoreApplication>
+#else
+#include <QMetaObject>
+#endif
 #include <QThread>
 #include <QTimer>
 #include <rxcpp/rx.hpp>
