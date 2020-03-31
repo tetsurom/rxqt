@@ -50,7 +50,13 @@ rxcpp::observable<QEvent*> inline from_event(QObject* qobject, QEvent::Type type
 
     return rxcpp::observable<>::create<QEvent*>(
         [qobject, type](rxcpp::subscriber<QEvent*> s) {
-            qobject->installEventFilter(new event::detail::EventFilter(qobject, type, s));
+            auto eventFilter = new event::detail::EventFilter(qobject, type, s);
+            qobject->installEventFilter(eventFilter);
+
+            s.add([eventFilter, qobject] {
+                qobject->removeEventFilter(eventFilter);
+                eventFilter->deleteLater();
+            });
         });
 }
 
