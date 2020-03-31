@@ -31,12 +31,16 @@ namespace signal {
 
                 return rxcpp::observable<>::create<long>(
                     [qobject, signal](const rxcpp::subscriber<long>& s) {
-                        long counter = 0;
-                        QObject::connect(qobject, signal, [s, counter]() mutable {
+                        auto conn0 = QObject::connect(qobject, signal, [s, counter = 0l]() mutable {
                             s.on_next(counter++);
                         });
-                        QObject::connect(qobject, &QObject::destroyed, [s]() {
+                        auto conn1 = QObject::connect(qobject, &QObject::destroyed, [s]() {
                             s.on_completed();
+                        });
+
+                        s.add([conn0, conn1] {
+                            QObject::disconnect(conn0);
+                            QObject::disconnect(conn1);
                         });
                     });
             }
@@ -54,12 +58,17 @@ namespace signal {
 
                 return rxcpp::observable<>::create<value_type>(
                     [qobject, signal](const rxcpp::subscriber<value_type>& s) {
-                        QObject::connect(qobject, signal, [s](const A0& v0) {
-                            s.on_next(v0);
-                        });
-                        QObject::connect(qobject, &QObject::destroyed, [s]() {
-                            s.on_completed();
-                        });
+                         auto conn0 = QObject::connect(qobject, signal, [s](const A0& v0) {
+                             s.on_next(v0);
+                         });
+                         auto conn1 = QObject::connect(qobject, &QObject::destroyed, [s]() {
+                             s.on_completed();
+                         });
+
+                         s.add([conn0, conn1] {
+                             QObject::disconnect(conn0);
+                             QObject::disconnect(conn1);
+                         });
                     });
             }
         };
@@ -76,11 +85,16 @@ namespace signal {
 
                 return rxcpp::observable<>::create<value_type>(
                     [qobject, signal](const rxcpp::subscriber<value_type>& s) {
-                        QObject::connect(qobject, signal, [s](const Args&... values) {
+                        auto conn0 = QObject::connect(qobject, signal, [s](const Args&... values){
                             s.on_next(std::make_tuple(values...));
                         });
-                        QObject::connect(qobject, &QObject::destroyed, [s]() {
+                        auto conn1 = QObject::connect(qobject, &QObject::destroyed, [s](){
                             s.on_completed();
+                        });
+
+                        s.add([conn0, conn1] {
+                            QObject::disconnect(conn0);
+                            QObject::disconnect(conn1);
                         });
                     });
             }
