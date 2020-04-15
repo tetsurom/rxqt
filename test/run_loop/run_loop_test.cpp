@@ -101,6 +101,47 @@ private slots:
         flush(runLoop);
     }
 
+    void subscribe_on_qt_thread()
+    {
+        rxqt::run_loop runLoop;
+        bool called = false;
+
+        auto mainthread = runLoop.observe_on_run_loop();
+
+        rxqt::RunLoopThread workthread;
+        workthread.start();
+        wait_until([&]() { return workthread.runLoop() != nullptr; });
+
+        rx::observable<>::timer(milliseconds(5))
+            .subscribe_on(workthread.runLoop()->observe_on_run_loop())
+            .observe_on(mainthread)
+            .subscribe([&](auto) { called = true; });
+
+        QVERIFY(!called);
+        wait_until([&]() { return called; });
+        workthread.quit();
+        workthread.wait();
+    }
+
+    void subscribe_on_observe_on_qt_thread()
+    {
+        bool called = false;
+
+        rxqt::RunLoopThread workthread;
+        workthread.start();
+        wait_until([&]() { return workthread.runLoop() != nullptr; });
+
+        rx::observable<>::timer(milliseconds(5))
+            .subscribe_on(workthread.runLoop()->observe_on_run_loop())
+            .observe_on(workthread.runLoop()->observe_on_run_loop())
+            .subscribe([&](auto) { called = true; });
+
+        QVERIFY(!called);
+        wait_until([&]() { return called; });
+        workthread.quit();
+        workthread.wait();
+    }
+
     void subscribe_on_observe_on_event_loop()
     {
         rxqt::run_loop runLoop;

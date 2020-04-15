@@ -17,7 +17,6 @@ class run_loop : public QObject {
 public:
     explicit run_loop(QObject* parent = nullptr)
         : QObject(parent)
-        , threadId(QThread::currentThreadId())
     {
         timer = new QTimer(this);
         // Give the RxCpp run loop a a function to let us schedule a wakeup in order to dispatch run loop events
@@ -68,7 +67,7 @@ private:
     void on_earlier_wakeup(int msec)
     {
         // Tell the timer to wake-up at `when` if its not already waking up earlier
-        if (threadId == QThread::currentThreadId()) {
+        if (this->thread() == QThread::currentThread()) {
             const int remainingTime = timer->remainingTime();
             if (remainingTime < 0 || msec < remainingTime) {
                 timer->start(msec);
@@ -112,7 +111,6 @@ private:
 
     rxcpp::schedulers::run_loop rxcpp_run_loop;
     QTimer* timer = nullptr;
-    Qt::HANDLE threadId;
 };
 
 } // namespace rxqt
