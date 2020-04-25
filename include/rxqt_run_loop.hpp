@@ -2,6 +2,7 @@
 
 #ifndef RXQT_RUN_LOOP_HPP
 
+#include <QtGlobal>
 #if QT_VERSION < 0x051000
 #include <QCoreApplication>
 #else
