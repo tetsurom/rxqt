@@ -20,12 +20,12 @@ jobs:
         path: ../Qt
         key: ${{ runner.os }}-${{ matrix.qt }}-QtCache
     - name: Install Qt
-      uses: jurplel/install-qt-action@v1
+      uses: jurplel/install-qt-action@v2
       with:
         version: ${{ matrix.qt }}
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v
       with:
         submodules: recursive
     - name: mkdir
