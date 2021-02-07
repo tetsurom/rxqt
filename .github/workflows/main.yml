@@ -8,15 +8,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        qt: [5.9.8, 5.12.5]
+        qt: [5.9.8, 5.15.2, 6.0.0]
 
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v1
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-${{ matrix.qt }}-QtCache
     - name: Install Qt
       uses: jurplel/install-qt-action@v1
       with:
         version: ${{ matrix.qt }}
+        cached: ${{ steps.cache-qt.outputs.cache-hit }}
     - name: Checkout
       uses: actions/checkout@v1
       with:
@@ -34,15 +41,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        qt: [5.9.8, 5.12.5]
+        qt: [5.9.8, 5.15.2, 6.0.0]
 
     runs-on: windows-latest
 
     steps:
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v1
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-${{ matrix.qt }}-QtCache
     - name: Install Qt
       uses: jurplel/install-qt-action@v1
       with:
         version: ${{ matrix.qt }}
+        cached: ${{ steps.cache-qt.outputs.cache-hit }}
     - name: Checkout
       uses: actions/checkout@v1
       with:
