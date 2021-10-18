@@ -1,7 +1,7 @@
 #pragma once
 #ifndef RXQT_RUN_LOOP_THREAD_HPP
 
-#include <rxqt_run_loop.hpp>
+#include "rxqt_run_loop.hpp"
 
 namespace rxqt {
 class RunLoopThread : public QThread {
